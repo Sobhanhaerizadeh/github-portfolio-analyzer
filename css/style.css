@@ -38,7 +38,7 @@ header p {
 }
 
 .repo-card {
-  background: #0a0d14;
+  background: #13161d;
   border: 1px solid #333;
 }
 
@@ -46,6 +46,15 @@ header p {
   color: #4fffb0;
   text-decoration: none;
   font-weight: bold;
+  border-radius: 10px;
+}
+
+.repo-card p {
+  color: #f0eaea;
+}
+
+.repo-card span {
+  color: #9c9a9a;
 }
 
 .hidden {

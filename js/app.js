@@ -86,7 +86,7 @@ async function loadUser() {
         }
 
         let ctx = document.getElementById("chart");
-
+        
         chart = new Chart(ctx, {
             type: "doughnut",
             data: {
@@ -111,7 +111,7 @@ async function loadUser() {
                     <div class="repo-card p-3 h-100">
                <a href="${repo.html_url}" target="_blank">${repo.name}</a>
             <p>${repo.description || "Keine Beschreibung"}</p>
-            <span>${repo.language || "Unbekannt"}</span>
+            <span>${"Programmiersprache: " + (repo.language || "Unbekannt")}</span>
                     </div>
                     </div>
                 `;
