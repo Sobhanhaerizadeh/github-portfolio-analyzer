@@ -1,127 +1,170 @@
-const input = document.getElementById("input");
-const btn = document.getElementById("btn");
-const error = document.getElementById("errorMsg");
-const loading = document.getElementById("loading");
-const content = document.getElementById("content");
+const input   = document.getElementById('input');
+const btn     = document.getElementById('btn');
+const errorEl = document.getElementById('errorMsg');
+const loading = document.getElementById('loading');
+const content = document.getElementById('content');
 
-let chart = null;
+// Chart colors matching the theme
+const CHART_COLORS = [
+  '#c8f060', '#60c8f0', '#f0c860', '#f06060', '#a060f0',
+  '#60f0a0', '#f09060', '#6090f0'
+];
 
-btn.addEventListener("click", loadUser);
+let chartInstance = null;
 
-input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-        loadUser();
-    }
-});
+// ── Events ──
+
+btn.addEventListener('click', loadUser);
+input.addEventListener('keydown', e => { if (e.key === 'Enter') loadUser(); });
+
+// ── Main function ──
 
 async function loadUser() {
-    let name = input.value.trim();
+  const name = input.value.trim();
 
-    if (name === "") {
-        window.alert("Bitte gib einen Namen ein!");
-        return;
+  if (!name) {
+    showError('Please enter a GitHub username.');
+    return;
+  }
+
+  showError('');
+  setLoading(true);
+
+  try {
+    const [userRes, repoRes] = await Promise.all([
+      fetch(`https://api.github.com/users/${name}`),
+      fetch(`https://api.github.com/users/${name}/repos?per_page=100`)
+    ]);
+
+    if (userRes.status === 404) throw new Error('User not found.');
+    if (userRes.status === 403) throw new Error('API rate limit reached. Try again later.');
+    if (!userRes.ok) throw new Error('Failed to load user.');
+    if (!repoRes.ok) throw new Error('Failed to load repositories.');
+
+    const user  = await userRes.json();
+    const repos = await repoRes.json();
+
+    renderProfile(user);
+    renderChart(repos);
+    renderRepos(repos);
+
+    setLoading(false);
+    content.classList.remove('hidden');
+
+  } catch (err) {
+    setLoading(false);
+    showError(err.message);
+  }
+}
+
+// ── Render Profile ──
+
+function renderProfile(user) {
+  document.getElementById('avatar').src       = user.avatar_url;
+  document.getElementById('name').textContent = user.name || user.login;
+  document.getElementById('login').textContent = '@' + user.login;
+  document.getElementById('bio').textContent  = user.bio || 'No bio available.';
+  document.getElementById('reposCount').textContent = formatNum(user.public_repos);
+  document.getElementById('followers').textContent  = formatNum(user.followers);
+  document.getElementById('following').textContent  = formatNum(user.following);
+  document.getElementById('profileLink').href = user.html_url;
+}
+
+// ── Render Chart ──
+
+function renderChart(repos) {
+  const languages = {};
+
+  repos.forEach(repo => {
+    if (!repo.language) return;
+    languages[repo.language] = (languages[repo.language] || 0) + 1;
+  });
+
+  const sorted = Object.entries(languages)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  const labels = sorted.map(i => i[0]);
+  const data   = sorted.map(i => i[1]);
+  const colors = CHART_COLORS.slice(0, labels.length);
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(document.getElementById('chart'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderColor: '#0a0a0f',
+        borderWidth: 3,
+        hoverBorderWidth: 3
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: { animateRotate: true, duration: 800 }
     }
+  });
 
-    error.textContent = "";
-    loading.classList.remove("hidden");
-    content.classList.add("hidden");
+  // Custom legend
+  const legend = document.getElementById('chartLegend');
+  legend.innerHTML = '';
+  sorted.forEach(([lang, count], i) => {
+    legend.innerHTML += `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${colors[i]}"></div>
+        <span class="legend-name">${lang}</span>
+        <span class="legend-count">${count} repo${count !== 1 ? 's' : ''}</span>
+      </div>
+    `;
+  });
+}
 
-    try {
-        let userRes = await fetch(`https://api.github.com/users/${name}`);
+// ── Render Repos ──
 
-        if (userRes.status === 404) {
+function renderRepos(repos) {
+  const box = document.getElementById('repos');
+  box.innerHTML = '';
 
-            throw new Error("Benutzer nicht gefunden.");
-        }
+  repos
+    .sort((a, b) => b.stargazers_count - a.stargazers_count)
+    .slice(0, 6)
+    .forEach(repo => {
+      box.innerHTML += `
+        <div class="repo-card">
+          <a class="repo-name" href="${repo.html_url}" target="_blank">${repo.name}</a>
+          <p class="repo-desc">${repo.description || 'No description.'}</p>
+          <div class="repo-meta">
+            <span class="repo-lang">
+              <span class="repo-lang-dot"></span>
+              ${repo.language || 'Unknown'}
+            </span>
+            <span class="repo-stars">★ ${repo.stargazers_count}</span>
+          </div>
+        </div>
+      `;
+    });
+}
 
-        if (userRes.status === 403) {
-            throw new Error("API Limit erreicht. Bitte später erneut versuchen.");
-        }
+// ── Helpers ──
 
-        if (!userRes.ok) {
-            throw new Error("Fehler beim Laden.");
-        }
+function showError(msg) {
+  errorEl.textContent = msg;
+}
 
-        let repoRes = await fetch(`https://api.github.com/users/${name}/repos?per_page=100`);
+function setLoading(state) {
+  if (state) {
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+  } else {
+    loading.classList.add('hidden');
+  }
+}
 
-        if (!repoRes.ok) {
-            throw new Error("Fehler beim Laden der Repositories.");
-        }
-
-
-        let user = await userRes.json();
-        let repos = await repoRes.json();
-
-        document.getElementById("avatar").src = user.avatar_url;
-        document.getElementById("name").textContent = user.name || user.login;
-        document.getElementById("login").textContent = "@" + user.login;
-        document.getElementById("bio").textContent = user.bio || "Keine Bio";
-        document.getElementById("reposCount").textContent = user.public_repos;
-        document.getElementById("followers").textContent = user.followers;
-        document.getElementById("following").textContent = user.following;
-        document.getElementById("link").href = user.html_url;
-
-        let languages = {};
-
-        repos.forEach(function (repo) {
-            if (!repo.language) return;
-
-            languages[repo.language] = (languages[repo.language] || 0) + 1;
-        });
-
-        let sorted = Object.entries(languages).sort(function (a, b) {
-            return b[1] - a[1];
-        }).slice(0, 5);
-
-        let labels = sorted.map(function (item) {
-            return item[0];
-        });
-
-        let data = sorted.map(function (item) {
-            return item[1];
-        });
-
-        if (chart) {
-            chart.destroy();
-        }
-
-        let ctx = document.getElementById("chart");
-        
-        chart = new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data
-                }]
-            }
-        });
-
-        let repoBox = document.getElementById("repos");
-        repoBox.innerHTML = "";
-
-        repos
-            .sort(function (a, b) {
-                return b.stargazers_count - a.stargazers_count;
-            })
-            .slice(0, 6)
-            .forEach(function (repo) {
-                repoBox.innerHTML += `
-                    <div class="col-md-6">
-                    <div class="repo-card p-3 h-100">
-               <a href="${repo.html_url}" target="_blank">${repo.name}</a>
-            <p>${repo.description || "Keine Beschreibung"}</p>
-            <span>${"Programmiersprache: " + (repo.language || "Unbekannt")}</span>
-                    </div>
-                    </div>
-                `;
-            });
-
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
-
-    } catch (err) {
-        loading.classList.add("hidden");
-        error.textContent = err.message;
-    }
+function formatNum(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return n;
 }

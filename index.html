@@ -1,80 +1,126 @@
 <!-- Sobhan Haerizadeh -->
 <!-- https://github.com/Sobhanhaerizadeh -->
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GitHub Portfolio Analyzer</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Portfolio Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
+  <div class="wrapper">
+
+    <!-- Header -->
     <header>
-        <h1>GitHub Analyzer</h1>
-        <p>Gib einen GitHub Namen ein und schau dir das Profil an.</p>
+      <div class="eyebrow">Dev Tool</div>
+      <h1>GitHub <em>Analyzer</em></h1>
+      <p class="subtitle">Enter a GitHub username and explore their profile, languages and top repositories.</p>
     </header>
 
-    <div class="input-group w-50 mx-auto">
-        <span class="input-group-text" id="addon-wrapping">@</span>
-        <input type="text" class="form-control" aria-describedby="addon-wrapping" id="input" placeholder="GitHub Name">
-        <button type="button" class="btn btn-primary" id="btn">Suchen</button>
+    <!-- Search -->
+    <div class="search-box">
+      <span class="search-at">@</span>
+      <input type="text" id="input" placeholder="GitHub username" autocomplete="off" spellcheck="false">
+      <button id="btn">
+        Analyze
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7H12M12 7L8 3M12 7L8 11"/>
+        </svg>
+      </button>
     </div>
 
-    <p class="error-msg" id="errorMsg"></p>
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg"></div>
 
-
-    <div id="loading" class="hidden">
-        <p>Lädt...</p>
+    <!-- Loading -->
+    <div class="loading hidden" id="loading">
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <p>Fetching profile...</p>
     </div>
 
-    <div id="content" class="hidden container mt-4" style="max-width: 800px;">
+    <!-- Content -->
+    <div id="content" class="hidden">
 
-        <!-- User Infos -->
-        <div class="card p-3 mb-4">
-            <div class="card-body">
-                <img id="avatar" src="" alt="Avatar">
-                <h2 id="name"></h2>
-                <p id="login"></p>
-                <p id="bio"></p>
-
-                <div class="stats">
-                    <span id="reposCount"></span> Repos
-                    <span id="followers"></span> Follower
-                    <span id="following"></span> Following
-                </div>
-
-                <a id="link" href="#" target="_blank">Profil öffnen</a>
-            </div>
+      <!-- Profile Card -->
+      <div class="profile-card">
+        <div class="profile-left">
+          <img id="avatar" src="" alt="Avatar">
+          <div class="profile-info">
+            <h2 id="name"></h2>
+            <p class="login" id="login"></p>
+            <p class="bio" id="bio"></p>
+          </div>
         </div>
-
-        <!-- Chart -->
-        <div class="card p-3 mb-4">
-            <div class="card-body">
-                <h3>Sprachen</h3>
-                <canvas id="chart" class="w-50 d-block mx-auto"></canvas>
-            </div>
+        <div class="profile-stats">
+          <div class="stat">
+            <span class="stat-num" id="reposCount"></span>
+            <span class="stat-lbl">Repos</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="followers"></span>
+            <span class="stat-lbl">Followers</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="following"></span>
+            <span class="stat-lbl">Following</span>
+          </div>
         </div>
+        <a id="profileLink" href="#" target="_blank" class="profile-link">
+          View on GitHub
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 7H12M12 7L8 3M12 7L8 11"/>
+          </svg>
+        </a>
+      </div>
 
+      <!-- Divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-label">LANGUAGES</span>
+        <div class="divider-line"></div>
+      </div>
 
-        <!-- Top Repositories -->
-        <div class="card p-3">
-            <div class="card-body">
-                <h3>Top Repositories</h3>
-                <div id="repos" class="row g-3"></div>
-            </div>
-        </div>
+      <!-- Chart -->
+      <div class="chart-card">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend" id="chartLegend"></div>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-label">TOP REPOSITORIES</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- Repos Grid -->
+      <div class="repos-grid" id="repos"></div>
+
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
-    <script src="js/app.js"></script>
+    <!-- Footer -->
+    <footer>
+      <div class="footer-left">
+        <span class="footer-made">Coded by</span>
+        <span class="footer-author">
+          <a href="https://sobhanhaerizadeh.de" target="_blank">Sobhan Haerizadeh</a>
+        </span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-heart">Made with <span class="heart-icon">♥</span></span>
+        <div class="footer-dot"></div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="js/app.js"></script>
 </body>
-
 </html>
