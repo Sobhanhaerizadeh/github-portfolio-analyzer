@@ -7,7 +7,7 @@ Echtzeit-Analyse von GitHub-Profilen mit Darstellung von Repositories, Follower-
 ## 📸 Preview
 
 > Gib einen GitHub-Benutzernamen ein und erhalte sofort ein vollständiges Profil-Dashboard.
-<img width="1587" height="698" alt="image" src="https://github.com/user-attachments/assets/0061fe18-a802-4ccf-ae2b-cd74079f2ba0" />
+<img width="1687" height="1237" alt="image" src="https://github.com/user-attachments/assets/7215f70f-85b1-4603-b71b-f3571b9a5ba6" />
 
 
 ---
